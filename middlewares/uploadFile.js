@@ -1,6 +1,4 @@
-const multer = require('multer')
-
-// Inisialisasi multer
+const multer = require('multer') // Inisialisasi multer
 
 // Destinasi file disimpan
 const storage = multer.diskStorage({

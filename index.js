@@ -157,15 +157,16 @@ app.get('/edit-blog/:id', function (req, res) {
   }) // render file edit-blog
 })
 
-app.post('/blog', upload.single('image'), function (req, res) {
-  let data = req.body
+app.post('/add-blog', upload.single('image'), function (req, res) {
+  let { title, content } = req.body
+
+  if (title == '' || content == '' || !req.file) {
+    req.flash('danger', 'Belum isi filenya tuh!')
+    return res.redirect('/add-blog')
+  }
 
   if (!req.session.user) {
     req.flash('danger', 'Ngapain? Login dulu!')
-    return res.redirect('/add-blog')
-  }
-  if (!req.file.filename) {
-    req.flash('danger', 'Belum isi semua tuh!')
     return res.redirect('/add-blog')
   }
 
@@ -173,40 +174,48 @@ app.post('/blog', upload.single('image'), function (req, res) {
 
   let image = req.file.filename
 
-  let query = `INSERT INTO tb_blog(title,content, image,author_id) VALUES ('${data.title}','${data.content}','${image}', '${authorId}')`
+  let query = `INSERT INTO tb_blog(title,content, image,author_id) VALUES ('${title}','${content}','${image}', '${authorId}')`
 
   db.connect(function (err, client, done) {
     if (err) throw err
 
     client.query(query, function (err, result) {
       if (err) throw err
+      done()
+
+      req.flash('success', 'Post Berhasil Ditambahkan')
+
       res.redirect('/blog')
     })
   })
 })
 
-app.post('/update-blog/:id', upload.single('image'), function (req, res) {
+app.post('/edit-blog/:id', upload.single('image'), function (req, res) {
   let id = req.params.id
-  let data = req.body
+  let { title, content } = req.body
+
+  if (title == '' || content == '' || !req.file) {
+    req.flash('danger', 'Belum isi filenya tuh!')
+    return res.redirect('/edit-blog/' + id)
+  }
 
   if (!req.session.user) {
     req.flash('danger', 'Ngapain? Login dulu!')
     return res.redirect('/edit-blog')
   }
-  if (!req.file.filename) {
-    req.flash('danger', 'Belum isi semua tuh!')
-    return res.redirect('/edit-blog')
-  }
 
   let image = req.file.filename
 
-  let query = `UPDATE tb_blog SET title='${data.title}', content='${data.content}',image='${image}' WHERE id=${id};`
+  let query = `UPDATE tb_blog SET title='${title}', content='${content}',image='${image}' WHERE id=${id};`
 
   db.connect(function (err, client, done) {
     if (err) throw err
 
     client.query(query, function (err) {
       if (err) throw err
+      done()
+      req.flash('success', 'Post Berhasil Diedit')
+
       res.redirect('/blog')
     })
   })
